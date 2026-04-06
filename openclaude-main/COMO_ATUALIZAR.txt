@@ -1,0 +1,30 @@
+========================================
+  COMO ATUALIZAR O REPO openclaudeFree
+========================================
+
+PASTA CORRETA:
+  C:\Users\ce651\OneDrive\Documentos\GitHub\openclaudeFree\openclaude-main
+
+Abra o terminal nessa pasta e rode os 3 comandos abaixo em ordem:
+
+  git fetch upstream
+  git reset --hard upstream/main
+  git push origin main --force
+
+Pronto! Seu repo openclaudeFree no GitHub estara atualizado.
+
+----------------------------------------
+O QUE CADA COMANDO FAZ:
+
+  git fetch upstream          → baixa as novidades do repo original (Gitlawb/openclaude)
+  git reset --hard upstream/main → substitui tudo pelo que esta no original
+  git push origin main --force   → sobe tudo pro seu repo openclaudeFree no GitHub
+
+----------------------------------------
+IMPORTANTE:
+  - Sempre rode os comandos na pasta: openclaude-main
+  - O --force é necessario porque substituimos o historico inteiro
+  - Se der erro no fetch, pode ser que o repo original foi deletado
+    (mas seu codigo continua salvo normalmente)
+
+========================================
