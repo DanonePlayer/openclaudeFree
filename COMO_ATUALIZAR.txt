@@ -3,7 +3,7 @@
 ========================================
 
 PASTA CORRETA:
-  C:\Users\ce651\OneDrive\Documentos\GitHub\openclaudeFree\openclaude-main
+  C:\Users\ce651\OneDrive\Documentos\GitHub\openclaudeFree
 
 Abra o terminal nessa pasta e rode os 3 comandos abaixo em ordem:
 
@@ -22,7 +22,7 @@ O QUE CADA COMANDO FAZ:
 
 ----------------------------------------
 IMPORTANTE:
-  - Sempre rode os comandos na pasta: openclaude-main
+  - Sempre rode os comandos na pasta: openclaudeFree
   - Seus arquivos proprios (como esse txt) serao mantidos
   - Se der erro no fetch, pode ser que o repo original foi deletado
     (mas seu codigo continua salvo normalmente)
