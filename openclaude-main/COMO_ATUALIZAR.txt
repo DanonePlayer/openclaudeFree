@@ -8,22 +8,22 @@ PASTA CORRETA:
 Abra o terminal nessa pasta e rode os 3 comandos abaixo em ordem:
 
   git fetch upstream
-  git reset --hard upstream/main
-  git push origin main --force
+  git merge upstream/main
+  git push origin main
 
 Pronto! Seu repo openclaudeFree no GitHub estara atualizado.
 
 ----------------------------------------
 O QUE CADA COMANDO FAZ:
 
-  git fetch upstream          → baixa as novidades do repo original (Gitlawb/openclaude)
-  git reset --hard upstream/main → substitui tudo pelo que esta no original
-  git push origin main --force   → sobe tudo pro seu repo openclaudeFree no GitHub
+  git fetch upstream       → baixa as novidades do repo original (Gitlawb/openclaude)
+  git merge upstream/main  → mescla as novidades sem apagar seus arquivos proprios
+  git push origin main     → sobe tudo pro seu repo openclaudeFree no GitHub
 
 ----------------------------------------
 IMPORTANTE:
   - Sempre rode os comandos na pasta: openclaude-main
-  - O --force é necessario porque substituimos o historico inteiro
+  - Seus arquivos proprios (como esse txt) serao mantidos
   - Se der erro no fetch, pode ser que o repo original foi deletado
     (mas seu codigo continua salvo normalmente)
 
