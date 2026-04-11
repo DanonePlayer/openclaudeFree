@@ -254,12 +254,12 @@ export function getSettingsRootPathForSource(source: SettingSource): string {
 
 /**
  * Get the user settings filename based on cowork mode.
- * Returns 'cowork_settings.json' when in cowork mode, 'settings.json' otherwise.
+ * Returns 'cowork_settings.json' when in cowork mode, 'settingsOpen.json' otherwise.
  *
  * Priority:
  * 1. Session state (set by CLI flag --cowork)
  * 2. Environment variable CLAUDE_CODE_USE_COWORK_PLUGINS
- * 3. Default: 'settings.json'
+ * 3. Default: 'settingsOpen.json'
  */
 function getUserSettingsFilePath(): string {
   if (
@@ -268,7 +268,7 @@ function getUserSettingsFilePath(): string {
   ) {
     return 'cowork_settings.json'
   }
-  return 'settings.json'
+  return 'settingsOpen.json'
 }
 
 export function getSettingsFilePathForSource(
@@ -300,9 +300,9 @@ export function getRelativeSettingsFilePathForSource(
 ): string {
   switch (source) {
     case 'projectSettings':
-      return join('.claude', 'settings.json')
+      return join('.claude', 'settingsOpen.json')
     case 'localSettings':
-      return join('.claude', 'settings.local.json')
+      return join('.claude', 'settingsOpen.local.json')
   }
 }
 
