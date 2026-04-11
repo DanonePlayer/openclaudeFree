@@ -25,7 +25,7 @@ Use APIs compatíveis com OpenAI, Gemini, GitHub Models, Codex, Ollama, Atomic C
 ### Instalar
 
 ```bash
-npm install -g @gitlawb/openclaude
+npm install -g github:DanonePlayer/openclaudeFree
 ```
 
 Se após a instalação aparecer `ripgrep not found`, instale o ripgrep no sistema e confirme que `rg --version` funciona no terminal antes de iniciar o OpenClaude.
