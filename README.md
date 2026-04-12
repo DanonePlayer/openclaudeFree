@@ -316,6 +316,55 @@ Para mudanças maiores, abra uma issue primeiro para que o escopo fique claro an
 - `bun run smoke`
 - execuções focadas com `bun test ...` para áreas modificadas
 
+## Adicionando um Novo Modelo (evitar "Compacting conversation")
+
+Se ao usar um modelo aparecer a mensagem `✻ Compacting conversation…` logo na primeira mensagem, é porque o modelo não está na tabela de context windows do projeto e o sistema assume um contexto de apenas **8k tokens** — o que faz o compactador disparar imediatamente.
+
+### Como corrigir
+
+Edite o arquivo:
+
+```
+src/utils/model/openaiContextWindows.ts
+```
+
+Adicione o modelo nas duas tabelas do arquivo:
+
+**1. `OPENAI_CONTEXT_WINDOWS`** — tamanho total do contexto (quantos tokens o modelo aceita como entrada):
+
+```typescript
+// Exemplo
+'seu-provedor/nome-do-modelo': 131_072,
+```
+
+**2. `OPENAI_MAX_OUTPUT_TOKENS`** — quantos tokens o modelo pode gerar na resposta:
+
+```typescript
+// Exemplo
+'seu-provedor/nome-do-modelo': 8_192,
+```
+
+Os valores corretos para cada modelo estão na página do provedor. Para OpenRouter: [openrouter.ai/models](https://openrouter.ai/models).
+
+> **Nota:** o prefixo do modelo é usado como chave. `'meta-llama/llama-3.1-8b-instruct'` também vai casar com `'meta-llama/llama-3.1-8b-instruct:free'` automaticamente.
+
+Depois de editar, rebuilde e commite:
+
+```bash
+bun run build
+git add src/utils/model/openaiContextWindows.ts dist/cli.mjs
+git commit -m "feat: adicionar contexto do modelo X"
+git push
+```
+
+### Por que isso acontece
+
+O OpenClaude monitora quantos tokens estão sendo usados na conversa. Quando o total ultrapassa um threshold (tamanho do contexto menos uma margem de segurança), ele resume a conversa automaticamente para liberar espaço.
+
+Se o modelo não está na tabela, o sistema usa 8k como padrão conservador — e como o system prompt do OpenClaude sozinho já ocupa vários tokens, o threshold é atingido imediatamente na primeira mensagem.
+
+---
+
 ## Aviso Legal
 
 O OpenClaude é um projeto independente da comunidade e não é afiliado, endossado ou patrocinado pela Anthropic.
