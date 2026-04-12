@@ -115,13 +115,48 @@ const OPENAI_CONTEXT_WINDOWS: Record<string, number> = {
   'tngtech/deepseek-r1t-chimera':            163_840,
 
   // Google (via OpenRouter)
-  'google/gemini-2.0-flash':1_048_576,
-  'google/gemini-2.5-pro':  1_048_576,
+  'google/gemini-1.5-pro':                    2_097_152,
+  'google/gemini-1.5-flash-8b':               1_048_576,
+  'google/gemini-1.5-flash':                  1_048_576,
+  'google/gemini-2.0-flash-lite':             1_048_576,
+  'google/gemini-2.0-flash-exp':              1_048_576,
+  'google/gemini-2.0-flash':                  1_048_576,
+  'google/gemini-2.5-pro':                    1_048_576,
+  'google/gemini-2.5-flash':                  1_048_576,
+  'google/gemini-3.1-flash-lite-preview':     1_048_576,
+  'google/gemini-3.1-flash-preview':          1_048_576,
+  'google/gemini-3.1-pro-preview':            1_048_576,
 
-  // Google (native via CLAUDE_CODE_USE_GEMINI)
+  // Google (native via generativelanguage.googleapis.com)
+  // Context windows from https://ai.google.dev/gemini-api/docs/models (April 2026)
+  // Prefix matching covers dated variants like gemini-2.5-pro-preview-05-06 etc.
+
+  // Gemini 1.5 family
+  'gemini-1.5-pro':         2_097_152,
+  'gemini-1.5-flash-8b':    1_048_576,
+  'gemini-1.5-flash':       1_048_576,
+
+  // Gemini 2.0 family
+  'gemini-2.0-flash-lite':  1_048_576,
+  'gemini-2.0-flash-exp':   1_048_576,
+  'gemini-2.0-flash-thinking-exp': 32_767,
   'gemini-2.0-flash':       1_048_576,
+  'gemini-2.0-pro-exp':     2_097_152,
+
+  // Gemini 2.5 family
   'gemini-2.5-pro':         1_048_576,
   'gemini-2.5-flash':       1_048_576,
+
+  // Gemini 3.x family (preview models)
+  'gemini-3.1-flash-lite-preview': 1_048_576,
+  'gemini-3.1-flash-preview':      1_048_576,
+  'gemini-3.1-pro-preview':        1_048_576,
+  'gemini-3.1-flash':              1_048_576,
+  'gemini-3.1-pro':                1_048_576,
+
+  // Gemini experimental / learnlm
+  'gemini-exp':             1_048_576,
+  'learnlm-2.0-flash-experimental': 1_048_576,
 
   // Ollama local models
   // Llama 3.1+ models support 128k context natively (Meta official specs).
@@ -247,13 +282,46 @@ const OPENAI_MAX_OUTPUT_TOKENS: Record<string, number> = {
   'tngtech/deepseek-r1t-chimera':               8_192,
 
   // Google (via OpenRouter)
-  'google/gemini-2.0-flash':   8_192,
-  'google/gemini-2.5-pro':    65_536,
+  'google/gemini-1.5-pro':                    8_192,
+  'google/gemini-1.5-flash-8b':               8_192,
+  'google/gemini-1.5-flash':                  8_192,
+  'google/gemini-2.0-flash-lite':             8_192,
+  'google/gemini-2.0-flash-exp':              8_192,
+  'google/gemini-2.0-flash':                  8_192,
+  'google/gemini-2.5-pro':                   65_536,
+  'google/gemini-2.5-flash':                 65_536,
+  'google/gemini-3.1-flash-lite-preview':     8_192,
+  'google/gemini-3.1-flash-preview':         32_768,
+  'google/gemini-3.1-pro-preview':           32_768,
 
-  // Google (native via CLAUDE_CODE_USE_GEMINI)
+  // Google (native via generativelanguage.googleapis.com)
+
+  // Gemini 1.5 family
+  'gemini-1.5-pro':            8_192,
+  'gemini-1.5-flash-8b':       8_192,
+  'gemini-1.5-flash':          8_192,
+
+  // Gemini 2.0 family
+  'gemini-2.0-flash-lite':     8_192,
+  'gemini-2.0-flash-exp':      8_192,
+  'gemini-2.0-flash-thinking-exp': 8_192,
   'gemini-2.0-flash':          8_192,
+  'gemini-2.0-pro-exp':        8_192,
+
+  // Gemini 2.5 family
   'gemini-2.5-pro':           65_536,
   'gemini-2.5-flash':         65_536,
+
+  // Gemini 3.x family (preview models)
+  'gemini-3.1-flash-lite-preview': 8_192,
+  'gemini-3.1-flash-preview':     32_768,
+  'gemini-3.1-pro-preview':       32_768,
+  'gemini-3.1-flash':             32_768,
+  'gemini-3.1-pro':               32_768,
+
+  // Gemini experimental / learnlm
+  'gemini-exp':              8_192,
+  'learnlm-2.0-flash-experimental': 8_192,
 
   // Ollama local models (conservative safe defaults)
   'llama3.3:70b':               4_096,
