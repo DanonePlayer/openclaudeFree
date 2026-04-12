@@ -31,13 +31,13 @@ describe('OpenClaude settings path surfaces', () => {
   test('permission save destinations point project settings to .openclaude', () => {
     expect(optionForPermissionSaveDestination('projectSettings')).toEqual({
       label: 'Project settings',
-      description: 'Checked in at .openclaude/settings.json',
+      description: `Checked in at ${join('.claude', 'settingsOpen.json')}`,
       value: 'projectSettings',
     })
 
     expect(optionForPermissionSaveDestination('localSettings')).toEqual({
       label: 'Project settings (local)',
-      description: 'Saved in .openclaude/settings.local.json',
+      description: `Saved in ${join('.claude', 'settingsOpen.local.json')}`,
       value: 'localSettings',
     })
   })
