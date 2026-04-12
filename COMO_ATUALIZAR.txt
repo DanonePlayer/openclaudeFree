@@ -1,30 +1,97 @@
-========================================
-  COMO ATUALIZAR O REPO openclaudeFree
-========================================
+========================================================
+  CHECKLIST — O QUE FAZER AO ATUALIZAR O PROJETO
+========================================================
 
-PASTA CORRETA:
+Pasta do projeto:
   C:\Users\ce651\OneDrive\Documentos\GitHub\openclaudeFree
 
-Abra o terminal nessa pasta e rode os 3 comandos abaixo em ordem:
+Sempre que modificar qualquer coisa no codigo e quiser
+que os usuarios recebam a versao nova, siga essa ordem:
+
+
+PASSO 1 — FACA SUAS MUDANCAS NO CODIGO
+  Edite os arquivos normalmente em src/, scripts/, etc.
+
+
+PASSO 2 — REBUILDA O PROJETO
+  Abre o terminal na pasta do projeto e roda:
+
+    bun run build
+
+  Isso gera o arquivo dist/cli.mjs com tudo compilado.
+  Se der erro aqui, nao avance — o build ta quebrado.
+
+
+PASSO 3 — TESTA RAPIDAMENTE
+  Confirma que o binario funciona:
+
+    node dist/cli.mjs --version
+
+  Deve mostrar a versao sem erros.
+
+
+PASSO 4 — COMMITA O DIST JUNTO COM O CODIGO
+  IMPORTANTE: o dist/cli.mjs precisa ir no commit,
+  pois e ele que o usuario baixa ao instalar.
+
+    git add .
+    git commit -m "descricao do que voce mudou"
+
+
+PASSO 5 — DE PUSH PRO GITHUB
+    git push
+
+
+PASSO 6 — PRONTO
+  A partir desse momento, qualquer pessoa que rodar
+  o comando abaixo ja recebe a versao atualizada:
+
+    npm install -g github:DanonePlayer/openclaudeFree
+
+
+========================================================
+  RESUMO RAPIDO (copie e cole no terminal)
+========================================================
+
+  bun run build
+  node dist/cli.mjs --version
+  git add .
+  git commit -m "sua mensagem aqui"
+  git push
+
+========================================================
+  ERROS COMUNS
+========================================================
+
+- Esqueceu de rodar "bun run build" antes do commit?
+  O usuario vai instalar a versao ANTIGA do dist.
+
+- O "bun run build" deu erro de TypeScript?
+  Corrija os erros antes de commitar.
+
+- Usuario reclamou que ainda ta na versao antiga?
+  Peca pra ele rodar:
+    npm uninstall -g openclaudefree
+    npm install -g github:DanonePlayer/openclaudeFree
+
+
+========================================================
+  BONUS — SINCRONIZAR COM O REPO ORIGINAL (Gitlawb)
+========================================================
+
+Se quiser puxar atualizacoes do projeto original
+(github.com/Gitlawb/openclaude) para o seu fork:
 
   git fetch upstream
   git merge upstream/main
-  git push origin main
 
-Pronto! Seu repo openclaudeFree no GitHub estara atualizado.
+  Depois refaca o build e siga o checklist acima.
 
-----------------------------------------
 O QUE CADA COMANDO FAZ:
+  git fetch upstream       → baixa novidades do repo original
+  git merge upstream/main  → mescla sem apagar seus arquivos
 
-  git fetch upstream       → baixa as novidades do repo original (Gitlawb/openclaude)
-  git merge upstream/main  → mescla as novidades sem apagar seus arquivos proprios
-  git push origin main     → sobe tudo pro seu repo openclaudeFree no GitHub
+IMPORTANTE: apos o merge sempre rode "bun run build"
+e commita o dist/cli.mjs novo antes de dar push.
 
-----------------------------------------
-IMPORTANTE:
-  - Sempre rode os comandos na pasta: openclaudeFree
-  - Seus arquivos proprios (como esse txt) serao mantidos
-  - Se der erro no fetch, pode ser que o repo original foi deletado
-    (mas seu codigo continua salvo normalmente)
-
-========================================
+========================================================
