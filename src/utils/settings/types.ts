@@ -668,6 +668,12 @@ export const SettingsSchema = lazySchema(() =>
         .describe(
           'Probability (0–1) that the session quality survey appears when eligible. 0.05 is a reasonable starting point.',
         ),
+      spinnerCharacter: z
+        .enum(['clawd', 'dragon', 'none'])
+        .optional()
+        .describe(
+          'Character shown next to the spinner while the model is working. Options: "clawd" (default Clawd), "dragon", "none" (no character).',
+        ),
       spinnerTipsEnabled: z
         .boolean()
         .optional()

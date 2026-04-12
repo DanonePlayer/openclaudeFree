@@ -15,6 +15,8 @@ import { SpinnerGlyph } from './SpinnerGlyph.js';
 import type { SpinnerMode } from './types.js';
 import { useStalledAnimation } from './useStalledAnimation.js';
 import { interpolateColor, toRGBColor } from './utils.js';
+import { DragonSolid } from '../LogoV2/DragonSolid.js';
+import type { DragonPose } from '../LogoV2/DragonSolid.js';
 const SEP_WIDTH = stringWidth(' · ');
 const THINKING_BARE_WIDTH = stringWidth('thinking');
 const SHOW_TOKENS_AFTER_MS = 30_000;
@@ -67,6 +69,9 @@ export type SpinnerAnimationRowProps = {
   // Thinking (state owned by parent, mode-dependent)
   thinkingStatus: 'thinking' | number | null;
   effortSuffix: string;
+
+  // Spinner character choice
+  spinnerCharacter?: 'clawd' | 'dragon' | 'none';
 };
 
 /**
@@ -99,7 +104,8 @@ export function SpinnerAnimationRow({
   foregroundedTeammate,
   leaderIsIdle = false,
   thinkingStatus,
-  effortSuffix
+  effortSuffix,
+  spinnerCharacter = 'clawd',
 }: SpinnerAnimationRowProps): React.ReactNode {
   const [viewportRef, time] = useAnimationFrame(reducedMotion ? null : 50);
 
@@ -224,11 +230,36 @@ export function SpinnerAnimationRow({
           <Byline>{parts}</Byline>
           <Text dimColor>)</Text>
         </> : null;
+  // Spinner character: pose based on mode
+  const isActive = !reducedMotion && spinnerCharacter !== 'none'
+  let characterNode: React.ReactNode = null
+  if (isActive) {
+    const isToolOrRequest = mode === 'requesting' || mode === 'tool-use' || mode === 'tool-input'
+    const isThinking = mode === 'thinking'
+    const tick = Math.floor(time / 600) % 2 === 0
+    if (spinnerCharacter === 'dragon') {
+      const dragonPose: DragonPose = isToolOrRequest ? 'wings-up'
+        : isThinking ? (tick ? 'look-left' : 'look-right')
+        : 'default'
+      characterNode = <DragonSolid pose={dragonPose} />
+    } else {
+      // 'clawd' — import inline to avoid unused-import lint when dragon is used
+      const { ClawdSolid } = require('../LogoV2/ClawdSolid.js') as typeof import('../LogoV2/ClawdSolid.js')
+      const clawdPose = isToolOrRequest ? 'arms-up'
+        : isThinking ? (tick ? 'think-left' : 'think-right')
+        : 'default'
+      characterNode = <ClawdSolid pose={clawdPose} />
+    }
+  }
+
   return <FullWidthRow>
-      <Box ref={viewportRef} flexDirection="row" flexWrap="wrap" marginTop={1}>
-        <SpinnerGlyph frame={frame} messageColor={messageColor} stalledIntensity={overrideColor ? 0 : stalledIntensity} reducedMotion={reducedMotion} time={time} />
-        <GlimmerMessage message={message} mode={mode} messageColor={messageColor} glimmerIndex={glimmerIndex} flashOpacity={flashOpacity} shimmerColor={shimmerColor} stalledIntensity={overrideColor ? 0 : stalledIntensity} />
-        {status}
+      <Box flexDirection="row" alignItems="flex-start">
+        {characterNode && <Box marginRight={1} marginTop={1}>{characterNode}</Box>}
+        <Box ref={viewportRef} flexDirection="row" flexWrap="wrap" marginTop={1}>
+          <SpinnerGlyph frame={frame} messageColor={messageColor} stalledIntensity={overrideColor ? 0 : stalledIntensity} reducedMotion={reducedMotion} time={time} />
+          <GlimmerMessage message={message} mode={mode} messageColor={messageColor} glimmerIndex={glimmerIndex} flashOpacity={flashOpacity} shimmerColor={shimmerColor} stalledIntensity={overrideColor ? 0 : stalledIntensity} />
+          {status}
+        </Box>
       </Box>
     </FullWidthRow>;
 }
