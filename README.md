@@ -67,8 +67,8 @@ Ou edite diretamente o arquivo de configurações:
 
 | Sistema | Caminho |
 |---------|---------|
-| Windows | `C:\Users\<seuUsuario>\.claude\settings.json` |
-| macOS / Linux | `~/.claude/settings.json` |
+| Windows | `C:\Users\<seuUsuario>\.claude\settingsOpen.json` |
+| macOS / Linux | `~/.claude/settingsOpen.json` |
 
 ```json
 {
