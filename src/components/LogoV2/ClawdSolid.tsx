@@ -23,7 +23,7 @@ const ROWS: Record<ClawdSolidPose, [string, string, string]> = {
     '  ▘▘ ▝▝',
   ],
   'arms-up': [
-    '\\▛███▜/',
+    ' /▛███▜/',
     '▐██████▌',
     '  ▘▘ ▝▝',
   ],

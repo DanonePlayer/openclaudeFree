@@ -147,12 +147,86 @@ const OPENAI_CONTEXT_WINDOWS: Record<string, number> = {
   'gemini-2.5-pro':         1_048_576,
   'gemini-2.5-flash':       1_048_576,
 
-  // Gemini 3.x family (preview models)
+  // Gemini 2.5 Flash Lite
+  'gemini-2.5-flash-lite':         1_048_576,
+
+  // Gemini 2.5 image generation
+  'gemini-2.5-flash-image':           32_768,
+
+  // Gemini 3.x family
+  // prefix covers: gemini-3-flash-preview, gemini-3-pro-preview, gemini-3-pro-image-preview
+  'gemini-3-flash':                1_048_576,
+  'gemini-3-pro':                  1_048_576,
   'gemini-3.1-flash-lite-preview': 1_048_576,
   'gemini-3.1-flash-preview':      1_048_576,
   'gemini-3.1-pro-preview':        1_048_576,
   'gemini-3.1-flash':              1_048_576,
   'gemini-3.1-pro':                1_048_576,
+  'gemini-3.1-flash-lite':         1_048_576,
+  'gemini-3.1-flash-image':           32_768,
+
+  // nano-banana-pro covers nano-banana-pro-preview
+  'nano-banana-pro':               1_048_576,
+
+  // Gemini Live API
+  'gemini-2.5-flash-native-audio': 1_048_576,
+  'gemini-3.1-flash-live':         1_048_576,
+
+  // Gemini latest aliases
+  'gemini-flash-latest':           1_048_576,
+  'gemini-flash-lite-latest':      1_048_576,
+  'gemini-pro-latest':             1_048_576,
+
+  // Gemma 3 (native API — 128 K context per official specs)
+  'gemma-3-1b-it':     131_072,
+  'gemma-3-1b':        131_072,
+  'gemma-3-2b-it':     131_072,
+  'gemma-3-2b':        131_072,
+  'gemma-3-4b-it':     131_072,
+  'gemma-3-4b':        131_072,
+  'gemma-3-12b-it':    131_072,
+  'gemma-3-12b':       131_072,
+  'gemma-3-27b-it':    131_072,
+  'gemma-3-27b':       131_072,
+  // Gemma 3n (nano — edge variants)
+  'gemma-3n-e4b-it':   131_072,
+  'gemma-3n-e2b-it':   131_072,
+
+  // Gemma 4 (native API — "ilimitado" context)
+  // gemma-4-26b covers gemma-4-26b-a4b-it via prefix
+  'gemma-4-26b':       1_048_576,
+  'gemma-4-31b-it':    1_048_576,
+  'gemma-4-31b':       1_048_576,
+
+  // Imagen 4 (image generation — prompt context)
+  // prefix covers imagen-4.0-generate-001 etc.
+  'imagen-4.0-generate':        32_768,
+  'imagen-4.0-ultra-generate':  32_768,
+  'imagen-4.0-fast-generate':   32_768,
+
+  // Gemini Embedding models
+  'gemini-embedding-001':   8_192,
+  'gemini-embedding-2':     8_192,
+
+  // Specialized / agentic models
+  // gemini-robotics-er-1.5 covers -preview via prefix
+  'gemini-robotics-er-1.5':         1_048_576,
+  // gemini-2.5-computer-use-preview covers -10-2025 etc. via prefix
+  'gemini-2.5-computer-use-preview': 1_048_576,
+  // deep-research-pro-preview covers -12-2025 etc. via prefix
+  'deep-research-pro-preview':       1_048_576,
+
+  // Lyria (audio generation) — prefix covers -preview
+  'lyria-3-clip':    32_768,
+  'lyria-3-pro':     32_768,
+
+  // Veo (video generation) — prefix covers -001 / -preview variants
+  'veo-2.0-generate':           32_768,
+  'veo-3.0-generate':           32_768,
+  'veo-3.0-fast-generate':      32_768,
+  'veo-3.1-generate':           32_768,
+  'veo-3.1-fast-generate':      32_768,
+  'veo-3.1-lite-generate':      32_768,
 
   // Gemini experimental / learnlm
   'gemini-exp':             1_048_576,
@@ -312,12 +386,80 @@ const OPENAI_MAX_OUTPUT_TOKENS: Record<string, number> = {
   'gemini-2.5-pro':           65_536,
   'gemini-2.5-flash':         65_536,
 
-  // Gemini 3.x family (preview models)
-  'gemini-3.1-flash-lite-preview': 8_192,
-  'gemini-3.1-flash-preview':     32_768,
-  'gemini-3.1-pro-preview':       32_768,
-  'gemini-3.1-flash':             32_768,
-  'gemini-3.1-pro':               32_768,
+  // Gemini 2.5 Flash Lite
+  'gemini-2.5-flash-lite':          65_536,
+
+  // Gemini 2.5 image generation
+  'gemini-2.5-flash-image':          8_192,
+
+  // Gemini 3.x family
+  'gemini-3-flash':                 32_768,
+  'gemini-3-pro':                   32_768,
+  'gemini-3.1-flash-lite-preview':   8_192,
+  'gemini-3.1-flash-preview':       32_768,
+  'gemini-3.1-pro-preview':         32_768,
+  'gemini-3.1-flash':               32_768,
+  'gemini-3.1-pro':                 32_768,
+  'gemini-3.1-flash-lite':           8_192,
+  'gemini-3.1-flash-image':          8_192,
+
+  // nano-banana-pro
+  'nano-banana-pro':                 8_192,
+
+  // Gemini Live API
+  'gemini-2.5-flash-native-audio':   8_192,
+  'gemini-3.1-flash-live':           8_192,
+
+  // Gemini latest aliases
+  'gemini-flash-latest':            65_536,
+  'gemini-flash-lite-latest':        8_192,
+  'gemini-pro-latest':              65_536,
+
+  // Gemma 3 (native API)
+  'gemma-3-1b-it':      4_096,
+  'gemma-3-1b':         4_096,
+  'gemma-3-2b-it':      4_096,
+  'gemma-3-2b':         4_096,
+  'gemma-3-4b-it':      4_096,
+  'gemma-3-4b':         4_096,
+  'gemma-3-12b-it':     8_192,
+  'gemma-3-12b':        8_192,
+  'gemma-3-27b-it':     8_192,
+  'gemma-3-27b':        8_192,
+  // Gemma 3n (nano — edge variants)
+  'gemma-3n-e4b-it':    8_192,
+  'gemma-3n-e2b-it':    4_096,
+
+  // Gemma 4 (native API)
+  'gemma-4-26b':        8_192,
+  'gemma-4-31b-it':    16_384,
+  'gemma-4-31b':       16_384,
+
+  // Imagen 4 (image generation)
+  'imagen-4.0-generate':        8_192,
+  'imagen-4.0-ultra-generate':  8_192,
+  'imagen-4.0-fast-generate':   8_192,
+
+  // Gemini Embedding models
+  'gemini-embedding-001':   8_192,
+  'gemini-embedding-2':     8_192,
+
+  // Specialized / agentic models
+  'gemini-robotics-er-1.5':          8_192,
+  'gemini-2.5-computer-use-preview': 8_192,
+  'deep-research-pro-preview':       8_192,
+
+  // Lyria (audio generation)
+  'lyria-3-clip':    8_192,
+  'lyria-3-pro':     8_192,
+
+  // Veo (video generation)
+  'veo-2.0-generate':       8_192,
+  'veo-3.0-generate':       8_192,
+  'veo-3.0-fast-generate':  8_192,
+  'veo-3.1-generate':       8_192,
+  'veo-3.1-fast-generate':  8_192,
+  'veo-3.1-lite-generate':  8_192,
 
   // Gemini experimental / learnlm
   'gemini-exp':              8_192,
