@@ -25,7 +25,7 @@ Use APIs compatíveis com OpenAI, Gemini, GitHub Models, Codex, Ollama, Atomic C
 ### Instalar
 
 ```bash
-npm install -g github:DanonePlayer/openclaudeFree
+npm install -g openclaudefree
 ```
 
 Se após a instalação aparecer `ripgrep not found`, instale o ripgrep no sistema e confirme que `rg --version` funciona no terminal antes de iniciar o OpenClaude.
@@ -61,6 +61,23 @@ $env:OPENAI_API_KEY="sk-sua-chave-aqui"
 $env:OPENAI_MODEL="gpt-4o"
 
 openclaude
+```
+
+Ou edite diretamente o arquivo de configurações:
+
+| Sistema | Caminho |
+|---------|---------|
+| Windows | `C:\Users\<seuUsuario>\.claude\settings.json` |
+| macOS / Linux | `~/.claude/settings.json` |
+
+```json
+{
+  "env": {
+    "CLAUDE_CODE_USE_OPENAI": "1",
+    "OPENAI_API_KEY": "sk-sua-chave-aqui",
+    "OPENAI_MODEL": "gpt-4o"
+  }
+}
 ```
 
 ### Configuração rápida com Ollama local
