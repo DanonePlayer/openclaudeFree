@@ -1,6 +1,6 @@
 import { execFileSync, spawn } from 'child_process'
 import { constants as fsConstants, readFileSync, unlinkSync } from 'fs'
-import { type FileHandle, mkdir, open, realpath } from 'fs/promises'
+import { type FileHandle, mkdir, open, stat } from 'fs/promises'
 import memoize from 'lodash-es/memoize.js'
 import { isAbsolute, resolve } from 'path'
 import { join as posixJoin } from 'path/posix'
@@ -94,12 +94,27 @@ export async function findSuitableShell(): Promise<string> {
   const isEnvShellSupported =
     env_shell && (env_shell.includes('bash') || env_shell.includes('zsh'))
   const preferBash = env_shell?.includes('bash')
+  const isWindows = process.platform === 'win32'
 
   // Try to locate shells using which (uses Bun.which when available)
   const [zshPath, bashPath] = await Promise.all([which('zsh'), which('bash')])
 
-  // Populate shell paths from which results and fallback locations
-  const shellPaths = ['/bin', '/usr/bin', '/usr/local/bin', '/opt/homebrew/bin']
+  // Populate shell paths from which results and fallback locations. On Windows,
+  // prefer Git Bash over the Windows/WSL bash launcher, which can exist even
+  // when WSL cannot start a shell in the current environment.
+  const shellPaths =
+    isWindows
+      ? [
+          'C:/Program Files/Git/bin',
+          'C:/Program Files/Git/usr/bin',
+          'C:/Program Files (x86)/Git/bin',
+          'C:/Program Files (x86)/Git/usr/bin',
+          '/bin',
+          '/usr/bin',
+          '/usr/local/bin',
+          '/opt/homebrew/bin',
+        ]
+      : ['/bin', '/usr/bin', '/usr/local/bin', '/opt/homebrew/bin']
 
   // Order shells based on user preference
   const shellOrder = preferBash ? ['bash', 'zsh'] : ['zsh', 'bash']
@@ -110,7 +125,13 @@ export async function findSuitableShell(): Promise<string> {
   // Add discovered paths to the beginning of our search list
   // Put the user's preferred shell type first
   if (preferBash) {
-    if (bashPath) supportedShells.unshift(bashPath)
+    if (bashPath) {
+      if (isWindows) {
+        supportedShells.push(bashPath)
+      } else {
+        supportedShells.unshift(bashPath)
+      }
+    }
     if (zshPath) supportedShells.push(zshPath)
   } else {
     if (zshPath) supportedShells.unshift(zshPath)
@@ -217,22 +238,34 @@ export async function exec(
 
   let cwd = pwd()
 
-  // Recover if the current working directory no longer exists on disk.
-  // This can happen when a command deletes its own CWD (e.g., temp dir cleanup).
+  // Recover if the current working directory no longer exists on disk,
+  // or was replaced by a non-directory (e.g., the path was renamed and a file
+  // was created in its place). realpath() succeeds on any existing path
+  // regardless of type, so we must also verify it's a directory — otherwise
+  // spawn would fail later with ENOTDIR / exit 126.
+  let cwdIsValidDir = false
   try {
-    await realpath(cwd)
+    cwdIsValidDir = (await stat(cwd)).isDirectory()
   } catch {
+    cwdIsValidDir = false
+  }
+  if (!cwdIsValidDir) {
     const fallback = getOriginalCwd()
     logForDebugging(
-      `Shell CWD "${cwd}" no longer exists, recovering to "${fallback}"`,
+      `Shell CWD "${cwd}" is not a valid directory, recovering to "${fallback}"`,
     )
+    let fallbackIsValidDir = false
     try {
-      await realpath(fallback)
+      fallbackIsValidDir = (await stat(fallback)).isDirectory()
+    } catch {
+      fallbackIsValidDir = false
+    }
+    if (fallbackIsValidDir) {
       setCwdState(fallback)
       cwd = fallback
-    } catch {
+    } else {
       return createFailedCommand(
-        `Working directory "${cwd}" no longer exists. Please restart Claude from an existing directory.`,
+        `Working directory "${cwd}" is no longer a valid directory. Please restart Claude from an existing directory.`,
       )
     }
   }

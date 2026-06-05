@@ -75,6 +75,7 @@ import type {
 import { isAdvisorBlock } from './advisor.js'
 import { isAgentSwarmsEnabled } from './agentSwarmsEnabled.js'
 import { count } from './array.js'
+import { isEnvTruthy } from './envUtils.js'
 import {
   type Attachment,
   type HookAttachment,
@@ -155,6 +156,7 @@ import { validateImagesForAPI } from './imageValidation.js'
 import { safeParseJSON } from './json.js'
 import { logError, logMCPDebug } from './log.js'
 import { normalizeLegacyToolName } from './permissions/permissionRuleParser.js'
+import { isDangerousPermissionMode } from './permissions/PermissionMode.js'
 import {
   getPlanModeV2AgentCount,
   getPlanModeV2ExploreAgentCount,
@@ -500,6 +502,11 @@ export function createUserMessage({
   // Provenance of this message. undefined = human (keyboard).
   origin?: MessageOrigin
 }): UserMessage {
+  const rewindRestorablePermissionMode = isDangerousPermissionMode(
+    permissionMode,
+  )
+    ? undefined
+    : permissionMode
   const m: UserMessage = {
     type: 'user',
     message: {
@@ -517,7 +524,7 @@ export function createUserMessage({
     mcpMeta,
     imagePasteIds,
     sourceToolAssistantUUID,
-    permissionMode,
+    permissionMode: rewindRestorablePermissionMode,
     origin,
   }
   return m
@@ -1766,7 +1773,7 @@ export function stripCallerFieldFromAssistantMessage(
           id: block.id,
           name: block.name,
           input: block.input,
-          ...(getAPIProvider() === 'gemini' && (block as any).extra_content ? { extra_content: (block as any).extra_content } : {})
+          ...(block.extra_content ? { extra_content: block.extra_content } : {})
         }
       }),
     },
@@ -2228,7 +2235,7 @@ export function normalizeMessagesForAPI(
                       ...restBlock,
                       name: canonicalName,
                       input: normalizedInput,
-                      ...(getAPIProvider() === 'gemini' && extra_content ? { extra_content } : {})
+                      ...(extra_content ? { extra_content } : {})
                     }
                   }
 
@@ -2240,7 +2247,7 @@ export function normalizeMessagesForAPI(
                     id: block.id,
                     name: canonicalName,
                     input: normalizedInput,
-                    ...(getAPIProvider() === 'gemini' && (block as any).extra_content ? { extra_content: (block as any).extra_content } : {})
+                    ...((block as any).extra_content ? { extra_content: (block as any).extra_content } : {})
                   }
                 }
                 return block
@@ -3666,6 +3673,9 @@ Read the team config to discover your teammates' names. Check the task list peri
       ])
     }
     case 'todo_reminder': {
+      if (isEnvTruthy(process.env.OPENCLAUDE_DISABLE_TOOL_REMINDERS)) {
+        return []
+      }
       const todoItems = attachment.content
         .map((todo, index) => `${index + 1}. [${todo.status}] ${todo.content}`)
         .join('\n')
@@ -3684,6 +3694,9 @@ Read the team config to discover your teammates' names. Check the task list peri
     }
     case 'task_reminder': {
       if (!isTodoV2Enabled()) {
+        return []
+      }
+      if (isEnvTruthy(process.env.OPENCLAUDE_DISABLE_TOOL_REMINDERS)) {
         return []
       }
       const taskItems = attachment.content

@@ -69,6 +69,12 @@ export const PermissionsSchema = lazySchema(() =>
         .enum(['disable'])
         .optional()
         .describe('Disable the ability to bypass permission prompts'),
+      allowBypassPermissionsMode: z
+        .boolean()
+        .optional()
+        .describe(
+          'Allow bypass permissions mode to appear in the mode list without requiring the CLI flag',
+        ),
       ...(feature('TRANSCRIPT_CLASSIFIER')
         ? {
             disableAutoMode: z
@@ -355,14 +361,14 @@ export const SettingsSchema = lazySchema(() =>
         .optional()
         .describe(
           'Customize attribution text for commits and PRs. ' +
-            'Each field defaults to the standard Claude Code attribution if not set.',
+            'Unspecified fields are off by default; set a non-empty string to opt in.',
         ),
       includeCoAuthoredBy: z
         .boolean()
         .optional()
         .describe(
           'Deprecated: Use attribution instead. ' +
-            "Whether to include Claude's co-authored by attribution in commits and PRs (defaults to true)",
+            "Whether to include Claude's co-authored by attribution in commits and PRs (defaults to false)",
         ),
       includeGitInstructions: z
         .boolean()
@@ -388,6 +394,16 @@ export const SettingsSchema = lazySchema(() =>
             'and full model IDs. ' +
             'If undefined, all models are available. If empty array, only the default model is available. ' +
             'Typically set in managed settings by enterprise administrators.',
+        ),
+      providerProfileModelPickerMode: z
+        .enum(['auto', 'profile', 'provider'])
+        .optional()
+        .catch(undefined)
+        .describe(
+          'Controls /model options when an active provider profile is applied. ' +
+            '"profile" shows only explicitly configured profile models; ' +
+            '"provider" shows the provider catalog/discovery list plus explicit profile-only custom models; ' +
+            '"auto" uses profile mode when the profile has multiple explicitly configured models, otherwise provider mode.',
         ),
       modelOverrides: z
         .record(z.string(), z.string())
@@ -678,6 +694,20 @@ export const SettingsSchema = lazySchema(() =>
         .boolean()
         .optional()
         .describe('Whether to show tips in the spinner'),
+      sponsoredTipsEnabled: z
+        .boolean()
+        .optional()
+        .describe(
+          'Whether to show sponsored partner tips alongside regular tips (default: true). Disabling does not affect regular tips.',
+        ),
+      sponsoredTipsFrequency: z
+        .number()
+        .int()
+        .min(0)
+        .optional()
+        .describe(
+          'Show at most 1 sponsored tip per N spinner picks. Default 10. Set 0 to disable sponsored tips.',
+        ),
       spinnerVerbs: z
         .object({
           mode: z.enum(['append', 'replace']),
@@ -714,11 +744,7 @@ export const SettingsSchema = lazySchema(() =>
             'enabled automatically for supported models.',
         ),
       effortLevel: z
-        .enum(
-          process.env.USER_TYPE === 'ant'
-            ? ['low', 'medium', 'high', 'max']
-            : ['low', 'medium', 'high'],
-        )
+        .enum(['low', 'medium', 'high', 'max'])
         .optional()
         .catch(undefined)
         .describe('Persisted effort level for supported models.'),
@@ -746,6 +772,15 @@ export const SettingsSchema = lazySchema(() =>
           'Map of agent identifier (subagent_type or team member name) to model name. ' +
             'Use "default" key as fallback. Model name must exist in agentModels. ' +
             'Example: { "Explore": "deepseek-chat", "general-purpose": "gpt-4o", "default": "gpt-4o" }',
+        ),
+      providerFallbackChain: z
+        .array(z.string())
+        .optional()
+        .describe(
+          'Ordered list of providerProfile ids. When the active provider returns a rate-limit ' +
+            'or quota error, OpenClaude advances to the next profile in this list (starting after ' +
+            'the currently-active id) and retries the turn. ' +
+            'Example: ["provider_anthropic", "provider_openai", "provider_ollama"]',
         ),
       fastMode: z
         .boolean()
@@ -860,7 +895,7 @@ export const SettingsSchema = lazySchema(() =>
         .optional()
         .describe(
           'Custom directory for plan files, relative to project root. ' +
-            'If not set, defaults to ~/.claude/plans/',
+            'If not set, defaults to ~/.openclaude/plans/',
         ),
       ...(process.env.USER_TYPE === 'ant'
         ? {
@@ -999,6 +1034,12 @@ export const SettingsSchema = lazySchema(() =>
         .describe(
           'Whether the user has accepted the bypass permissions mode dialog',
         ),
+      skipFullAccessModePermissionPrompt: z
+        .boolean()
+        .optional()
+        .describe(
+          'Whether the user has accepted the full access mode dialog',
+        ),
       ...(feature('TRANSCRIPT_CLASSIFIER')
         ? {
             skipAutoPermissionPrompt: z
@@ -1088,10 +1129,10 @@ export const SettingsSchema = lazySchema(() =>
         .array(z.string())
         .optional()
         .describe(
-          'Glob patterns or absolute paths of CLAUDE.md files to exclude from loading. ' +
+          'Glob patterns or absolute paths of AGENTS.md/CLAUDE.md files to exclude from loading. ' +
             'Patterns are matched against absolute file paths using picomatch. ' +
             'Only applies to User, Project, and Local memory types (Managed/policy files cannot be excluded). ' +
-            'Examples: "/home/user/monorepo/CLAUDE.md", "**/code/CLAUDE.md", "**/some-dir/.claude/rules/**"',
+            'Examples: "/home/user/monorepo/AGENTS.md", "**/code/CLAUDE.md", "**/some-dir/.claude/rules/**"',
         ),
       pluginTrustMessage: z
         .string()

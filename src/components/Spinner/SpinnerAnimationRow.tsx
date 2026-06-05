@@ -180,11 +180,15 @@ export function SpinnerAnimationRow({
   let thinkingWidthValue = thinkingText ? stringWidth(thinkingText) : 0;
 
   // === Progressive width gating ===
+  // messageWidth = glimmer text + spinner glyph (width: 2).
+  // parensWidth = 3 accounts for " (" and ")" wrapping the status parts.
+  // The extra 1 is a safety margin so content never touches the right edge.
   const messageWidth = glimmerMessageWidth + 2;
   const sep = SEP_WIDTH;
+  const parensWidth = 4;
   const wantsThinking = thinkingStatus !== null;
   const wantsTimerAndTokens = verbose || hasRunningTeammates || effectiveElapsedMs > SHOW_TOKENS_AFTER_MS;
-  const availableSpace = columns - messageWidth - 5;
+  const availableSpace = columns - messageWidth - parensWidth;
   let showThinking = wantsThinking && availableSpace > thinkingWidthValue;
   if (!showThinking && wantsThinking && thinkingStatus === 'thinking' && effortSuffix) {
     if (availableSpace > THINKING_BARE_WIDTH) {

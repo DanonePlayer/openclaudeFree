@@ -44,10 +44,10 @@ function getCandidateLocalBinaryPaths(localInstallDir: string): string[] {
 }
 
 export function isManagedLocalInstallationPath(execPath: string): boolean {
-  const normalizedPath = execPath.replace(/\\/g, '/')
+  const normalizedExecPath = execPath.replace(/\\+/g, '/')
   return (
-    normalizedPath.includes('/.openclaude/local/node_modules/') ||
-    normalizedPath.includes('/.claude/local/node_modules/')
+    normalizedExecPath.includes('/.openclaude/local/node_modules/') ||
+    normalizedExecPath.includes('/.claude/local/node_modules/')
   )
 }
 

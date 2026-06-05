@@ -1,55 +1,26 @@
 /**
- * openaiContextWindows.ts
- * Context window sizes for OpenAI-compatible models used via the shim.
- * Fixes: auto-compact and warnings using wrong 200k default for OpenAI models.
+ * Runtime overrides for OpenAI-compatible model limits.
  *
- * When CLAUDE_CODE_USE_OPENAI=1, getContextWindowForModel() falls through to
- * MODEL_CONTEXT_WINDOW_DEFAULT (200k). This causes the warning and blocking
- * thresholds to be set at 200k even for models like gpt-4o (128k) or llama3 (8k),
- * meaning users get no warning before hitting a hard API error.
- *
- * Prices in tokens as of April 2026 — update as needed.
+ * Built-in model limits, including legacy aliases, live in
+ * src/integrations/models. These helpers only preserve the documented JSON env
+ * override path for custom/private deployments.
  */
 
+type LimitEnvVar =
+  | 'CLAUDE_CODE_OPENAI_CONTEXT_WINDOWS'
+  | 'CLAUDE_CODE_OPENAI_MAX_OUTPUT_TOKENS'
+
+export type OpenAILimitOverrideMatches = {
+  exact?: number
+  prefix?: number
+}
+
+// Built-in context window defaults for OpenAI-compatible models.
+// When a model is not found here, the system falls back to src/integrations/models.
+// NOTE: bare Claude model names (e.g. 'claude-sonnet-4') are intentionally
+// omitted. Different OpenAI-compatible providers may impose different context
+// limits for the same model name, so we cannot safely hardcode values here.
 const OPENAI_CONTEXT_WINDOWS: Record<string, number> = {
-  // GitHub Copilot — values from https://api.githubcopilot.com/models (2026-04-09)
-  // Namespaced so they don't collide with bare model names from other providers.
-  'github:copilot':                           128_000,
-  // Claude
-  'github:copilot:claude-sonnet-4':           216_000,
-  'github:copilot:claude-haiku-4':            200_000,
-  'github:copilot:claude-sonnet-4.5':         200_000,
-  'github:copilot:claude-sonnet-4.6':         200_000,
-  'github:copilot:claude-opus-4':             200_000,
-  'github:copilot:claude-opus-4.6':           200_000,
-  // GPT
-  'github:copilot:gpt-3.5-turbo':             16_384,
-  'github:copilot:gpt-4':                     32_768,
-  'github:copilot:gpt-4-0125-preview':       128_000,
-  'github:copilot:gpt-4-o-preview':          128_000,
-  'github:copilot:gpt-4.1':                  128_000,
-  'github:copilot:gpt-4o':                   128_000,
-  'github:copilot:gpt-4o-2024-08-06':        128_000,
-  'github:copilot:gpt-4o-2024-11-20':        128_000,
-  'github:copilot:gpt-4o-mini':              128_000,
-  'github:copilot:gpt-5-mini':               264_000,
-  'github:copilot:gpt-5.1':                  264_000,
-  'github:copilot:gpt-5.2':                  400_000,
-  'github:copilot:gpt-5.2-codex':            400_000,
-  'github:copilot:gpt-5.3-codex':            400_000,
-  'github:copilot:gpt-5.4':                  400_000,
-  'github:copilot:gpt-5.4-mini':             400_000,
-  // Gemini
-  'github:copilot:gemini-2.5-pro':           128_000,
-  'github:copilot:gemini-3-flash-preview':   128_000,
-  'github:copilot:gemini-3.1-pro-preview':   200_000,
-  // Grok
-  'github:copilot:grok-code-fast-1':         256_000,
-
-  // NOTE: bare Claude model names (e.g. 'claude-sonnet-4') are intentionally
-  // omitted. Different OpenAI-compatible providers may impose different context
-  // limits for the same model name, so we cannot safely hardcode values here.
-
   // OpenAI
   'gpt-5.4':               1_050_000,
   'gpt-5.4-mini':            400_000,
@@ -482,46 +453,167 @@ const OPENAI_MAX_OUTPUT_TOKENS: Record<string, number> = {
   'codestral':                   8_192,
 }
 
-function lookupByModel<T>(table: Record<string, T>, model: string): T | undefined {
-  // Try provider-qualified key first: "{OPENAI_MODEL}:{model}" so that
-  // e.g. "github:copilot:claude-haiku-4.5" can have different limits than
-  // a bare "claude-haiku-4.5" served by another provider.
-  const providerModel = process.env.OPENAI_MODEL?.trim()
-  if (providerModel && providerModel !== model) {
-    const qualified = `${providerModel}:${model}`
-    const qualifiedResult = lookupByKey(table, qualified)
-    if (qualifiedResult !== undefined) return qualifiedResult
+function readExternalLimits(
+  envVarName: LimitEnvVar,
+  processEnv: NodeJS.ProcessEnv,
+): Record<string, number> {
+  const raw = processEnv[envVarName]
+  if (!raw) {
+    return {}
   }
-  return lookupByKey(table, model)
-}
 
-function lookupByKey<T>(table: Record<string, T>, model: string): T | undefined {
-  if (table[model] !== undefined) return table[model]
-  // Sort keys by length descending so the most specific prefix wins.
-  // Without this, 'gpt-4-turbo-preview' could match 'gpt-4' (8k) instead
-  // of 'gpt-4-turbo' (128k) depending on V8's key iteration order.
-  const sortedKeys = Object.keys(table).sort((a, b) => b.length - a.length)
-  for (const key of sortedKeys) {
-    if (model.startsWith(key)) return table[key]
+  try {
+    const parsed = JSON.parse(raw) as unknown
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return {}
+    }
+
+    return Object.fromEntries(
+      Object.entries(parsed)
+        .filter(
+          (entry): entry is [string, number] =>
+            typeof entry[0] === 'string' &&
+            typeof entry[1] === 'number' &&
+            Number.isFinite(entry[1]) &&
+            entry[1] > 0,
+        )
+        .map(([key, value]) => [key.trim(), value])
+        .filter(([key]) => key.length > 0),
+    )
+  } catch {
+    return {}
   }
-  return undefined
 }
 
-/**
- * Look up the context window for an OpenAI-compatible model.
- * Returns undefined if the model is not in the table.
- *
- * Falls back to prefix matching so dated variants like
- * "gpt-4o-2024-11-20" resolve to the base "gpt-4o" entry.
- */
-export function getOpenAIContextWindow(model: string): number | undefined {
-  return lookupByModel(OPENAI_CONTEXT_WINDOWS, model)
+function lookupExactByKey(
+  entries: Record<string, number>,
+  key: string | undefined,
+): number | undefined {
+  const normalizedKey = key?.trim()
+  if (!normalizedKey) {
+    return undefined
+  }
+
+  return entries[normalizedKey] ?? entries[normalizedKey.toLowerCase()]
 }
 
-/**
- * Look up the max output tokens for an OpenAI-compatible model.
- * Returns undefined if the model is not in the table.
- */
-export function getOpenAIMaxOutputTokens(model: string): number | undefined {
-  return lookupByModel(OPENAI_MAX_OUTPUT_TOKENS, model)
+function lookupPrefixByKey(
+  entries: Record<string, number>,
+  key: string | undefined,
+): number | undefined {
+  const normalizedKey = key?.trim()
+  if (!normalizedKey) {
+    return undefined
+  }
+
+  const prefixKey = Object.keys(entries)
+    .sort((left, right) => right.length - left.length)
+    .find(entryKey => normalizedKey.startsWith(entryKey))
+
+  return prefixKey ? entries[prefixKey] : undefined
+}
+
+function getOpenAIBaseUrlHost(processEnv: NodeJS.ProcessEnv): string | undefined {
+  const baseUrl =
+    processEnv.OPENAI_BASE_URL?.trim() || processEnv.OPENAI_API_BASE?.trim()
+  if (!baseUrl) {
+    return undefined
+  }
+
+  try {
+    return new URL(baseUrl).host
+  } catch {
+    return undefined
+  }
+}
+
+function lookupByModel(
+  entries: Record<string, number>,
+  model: string | undefined,
+  processEnv: NodeJS.ProcessEnv,
+): OpenAILimitOverrideMatches {
+  const modelName = model?.trim() || processEnv.OPENAI_MODEL?.trim()
+  const baseUrlHost = getOpenAIBaseUrlHost(processEnv)
+  const hostQualifiedModel =
+    baseUrlHost && modelName ? `${baseUrlHost}:${modelName}` : undefined
+
+  return {
+    exact:
+      lookupExactByKey(entries, hostQualifiedModel) ??
+      lookupExactByKey(entries, modelName),
+    prefix:
+      lookupPrefixByKey(entries, hostQualifiedModel) ??
+      lookupPrefixByKey(entries, modelName),
+  }
+}
+
+function lookupExternalLimitMatches(
+  envVarName: LimitEnvVar,
+  model: string | undefined,
+  processEnv: NodeJS.ProcessEnv,
+): OpenAILimitOverrideMatches {
+  return lookupByModel(
+    readExternalLimits(envVarName, processEnv),
+    model,
+    processEnv,
+  )
+}
+
+function lookupExternalLimit(
+  envVarName: LimitEnvVar,
+  model: string | undefined,
+  processEnv: NodeJS.ProcessEnv,
+): number | undefined {
+  const matches = lookupExternalLimitMatches(envVarName, model, processEnv)
+  return matches.exact ?? matches.prefix
+}
+
+export function getOpenAIContextWindow(
+  model: string | undefined,
+  processEnv: NodeJS.ProcessEnv = process.env,
+): number | undefined {
+  const external = lookupExternalLimit(
+    'CLAUDE_CODE_OPENAI_CONTEXT_WINDOWS',
+    model,
+    processEnv,
+  )
+  if (external !== undefined) return external
+  const matches = lookupByModel(OPENAI_CONTEXT_WINDOWS, model, processEnv)
+  return matches.exact ?? matches.prefix
+}
+
+export function getOpenAIContextWindowMatches(
+  model: string | undefined,
+  processEnv: NodeJS.ProcessEnv = process.env,
+): OpenAILimitOverrideMatches {
+  return lookupExternalLimitMatches(
+    'CLAUDE_CODE_OPENAI_CONTEXT_WINDOWS',
+    model,
+    processEnv,
+  )
+}
+
+export function getOpenAIMaxOutputTokens(
+  model: string | undefined,
+  processEnv: NodeJS.ProcessEnv = process.env,
+): number | undefined {
+  const external = lookupExternalLimit(
+    'CLAUDE_CODE_OPENAI_MAX_OUTPUT_TOKENS',
+    model,
+    processEnv,
+  )
+  if (external !== undefined) return external
+  const matches = lookupByModel(OPENAI_MAX_OUTPUT_TOKENS, model, processEnv)
+  return matches.exact ?? matches.prefix
+}
+
+export function getOpenAIMaxOutputTokenMatches(
+  model: string | undefined,
+  processEnv: NodeJS.ProcessEnv = process.env,
+): OpenAILimitOverrideMatches {
+  return lookupExternalLimitMatches(
+    'CLAUDE_CODE_OPENAI_MAX_OUTPUT_TOKENS',
+    model,
+    processEnv,
+  )
 }

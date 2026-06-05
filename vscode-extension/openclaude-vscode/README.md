@@ -28,7 +28,7 @@ Um companheiro prático do VS Code para o OpenClaude com um **Centro de Controle
 ## Requisitos
 
 - VS Code `1.95+`
-- `openclaude` disponível no PATH do terminal (`npm install -g @gitlawb/openclaude`)
+- `openclaude` disponível no PATH do terminal (`npm install -g github:DanonePlayer/openclaudeFree`)
 
 ## Comandos
 

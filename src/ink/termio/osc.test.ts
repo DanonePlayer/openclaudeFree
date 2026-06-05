@@ -1,5 +1,9 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test'
 import { join } from 'node:path'
+import {
+  acquireSharedMutationLock,
+  releaseSharedMutationLock,
+} from '../../test/sharedMutationLock.js'
 
 const originalEnv = { ...process.env }
 const originalPlatform = process.platform
@@ -11,14 +15,16 @@ const execFileNoThrowMock = mock(
   async () => ({ code: 0, stdout: '', stderr: '' }),
 )
 
-mock.module('../../utils/execFileNoThrow.js', () => ({
-  execFileNoThrow: execFileNoThrowMock,
-  execFileNoThrowWithCwd: execFileNoThrowMock,
-}))
+function installOscMocks(): void {
+  mock.module('../../utils/execFileNoThrow.js', () => ({
+    execFileNoThrow: execFileNoThrowMock,
+    execFileNoThrowWithCwd: execFileNoThrowMock,
+  }))
 
-mock.module('../../utils/tempfile.js', () => ({
-  generateTempFilePath: generateTempFilePathMock,
-}))
+  mock.module('../../utils/tempfile.js', () => ({
+    generateTempFilePath: generateTempFilePathMock,
+  }))
+}
 
 async function importFreshOscModule() {
   return import(`./osc.ts?ts=${Date.now()}-${Math.random()}`)
@@ -44,7 +50,9 @@ async function waitForExecCall(
 }
 
 describe('Windows clipboard fallback', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    await acquireSharedMutationLock('ink/termio/osc.test.ts')
+    installOscMocks()
     execFileNoThrowMock.mockClear()
     generateTempFilePathMock.mockClear()
     process.env = { ...originalEnv }
@@ -54,22 +62,25 @@ describe('Windows clipboard fallback', () => {
   })
 
   afterEach(() => {
-    process.env = { ...originalEnv }
-    Object.defineProperty(process, 'platform', { value: originalPlatform })
+    try {
+      mock.restore()
+      process.env = { ...originalEnv }
+      Object.defineProperty(process, 'platform', { value: originalPlatform })
+    } finally {
+      releaseSharedMutationLock()
+    }
   })
 
   test('uses PowerShell instead of clip.exe for local Windows copy', async () => {
     const { setClipboard } = await importFreshOscModule()
 
     await setClipboard('Привет мир')
-    await flushClipboardCopy()
+    const windowsCall = await waitForExecCall('powershell')
 
     expect(execFileNoThrowMock.mock.calls.some(([cmd]) => cmd === 'clip')).toBe(
       false,
     )
-    expect(
-      execFileNoThrowMock.mock.calls.some(([cmd]) => cmd === 'powershell'),
-    ).toBe(true)
+    expect(windowsCall).toBeDefined()
   })
 
   test('passes Windows clipboard text through a UTF-8 temp file instead of stdin', async () => {
@@ -96,7 +107,9 @@ describe('Windows clipboard fallback', () => {
 })
 
 describe('clipboard path behavior remains stable', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    await acquireSharedMutationLock('ink/termio/osc.test.ts')
+    installOscMocks()
     execFileNoThrowMock.mockClear()
     process.env = { ...originalEnv }
     delete process.env['SSH_CONNECTION']
@@ -104,8 +117,13 @@ describe('clipboard path behavior remains stable', () => {
   })
 
   afterEach(() => {
-    process.env = { ...originalEnv }
-    Object.defineProperty(process, 'platform', { value: originalPlatform })
+    try {
+      mock.restore()
+      process.env = { ...originalEnv }
+      Object.defineProperty(process, 'platform', { value: originalPlatform })
+    } finally {
+      releaseSharedMutationLock()
+    }
   })
 
   test('getClipboardPath stays native on local macOS', async () => {

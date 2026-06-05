@@ -456,10 +456,19 @@ const checkDependencies = memoize((): SandboxDependencyCheck => {
   })
 })
 
+/**
+ * Read sandbox.enabled only from trusted settings sources.
+ * projectSettings is intentionally excluded — a malicious repo could
+ * otherwise disable the sandbox via .claude/settings.json.
+ */
 function getSandboxEnabledSetting(): boolean {
   try {
-    const settings = getSettings_DEPRECATED()
-    return settings?.sandbox?.enabled ?? false
+    return !!(
+      getSettingsForSource('userSettings')?.sandbox?.enabled ||
+      getSettingsForSource('localSettings')?.sandbox?.enabled ||
+      getSettingsForSource('flagSettings')?.sandbox?.enabled ||
+      getSettingsForSource('policySettings')?.sandbox?.enabled
+    )
   } catch (error) {
     logForDebugging(`Failed to get settings for sandbox check: ${error}`)
     return false
@@ -959,7 +968,8 @@ export const SandboxManager: ISandboxManager = {
   waitForNetworkInitialization: BaseSandboxManager.waitForNetworkInitialization,
   getSandboxViolationStore: BaseSandboxManager.getSandboxViolationStore,
   annotateStderrWithSandboxFailures:
-    BaseSandboxManager.annotateStderrWithSandboxFailures,
+    BaseSandboxManager.annotateStderrWithSandboxFailures ??
+    ((_command: string, stderr: string): string => stderr),
   cleanupAfterCommand: (): void => {
     BaseSandboxManager.cleanupAfterCommand()
     scrubBareGitRepoFiles()

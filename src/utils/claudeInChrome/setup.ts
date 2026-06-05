@@ -4,9 +4,9 @@ import { homedir } from 'os'
 import { join } from 'path'
 import { fileURLToPath } from 'url'
 import {
+  getSessionDangerousPermissionMode,
   getIsInteractive,
   getIsNonInteractiveSession,
-  getSessionBypassPermissionsMode,
 } from '../../bootstrap/state.js'
 import { getFeatureValue_CACHED_MAY_BE_STALE } from '../../services/analytics/growthbook.js'
 import type { ScopedMcpServerConfig } from '../../services/mcp/types.js'
@@ -99,7 +99,7 @@ export function setupClaudeInChrome(): {
   )
 
   const env: Record<string, string> = {}
-  if (getSessionBypassPermissionsMode()) {
+  if (getSessionDangerousPermissionMode() === 'fullAccess') {
     env.CLAUDE_CHROME_PERMISSION_MODE = 'skip_all_permission_checks'
   }
   const hasEnv = Object.keys(env).length > 0
@@ -355,7 +355,7 @@ exec ${command}
  *
  * Only positive detections are persisted. A negative result from the
  * filesystem scan is not cached, because it may come from a machine that
- * shares ~/.claude.json but has no local Chrome (e.g. a remote dev
+ * shares ~/.openclaude.json but has no local Chrome (e.g. a remote dev
  * environment using the bridge), and caching it would permanently poison
  * auto-enable for every session on every machine that reads that config.
  */

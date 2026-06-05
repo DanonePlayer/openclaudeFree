@@ -25,10 +25,17 @@ Use APIs compatíveis com OpenAI, Gemini, GitHub Models, Codex, Ollama, Atomic C
 ### Instalar
 
 ```bash
-npm install -g openclaudefree
+npm install -g github:DanonePlayer/openclaudeFree
 ```
 
 Se após a instalação aparecer `ripgrep not found`, instale o ripgrep no sistema e confirme que `rg --version` funciona no terminal antes de iniciar o OpenClaude.
+
+**Verificar / forçar atualização:**
+
+```bash
+npm uninstall -g openclaudefree
+npm install -g github:DanonePlayer/openclaudeFree
+```
 
 ### Iniciar
 
@@ -40,6 +47,7 @@ Dentro do OpenClaude:
 
 - rode `/provider` para configuração guiada de provedores e perfis salvos
 - rode `/onboard-github` para integração com GitHub Models
+- rode `/character` para mudar o personagem exibido ao lado do spinner
 
 ### Configuração rápida com OpenAI
 
@@ -67,8 +75,8 @@ Ou edite diretamente o arquivo de configurações:
 
 | Sistema | Caminho |
 |---------|---------|
-| Windows | `C:\Users\<seuUsuario>\.claude\settingsOpen.json` |
-| macOS / Linux | `~/.claude/settingsOpen.json` |
+| Windows | `C:\Users\<seuUsuario>\.openclaude\settings.json` |
+| macOS / Linux | `~/.openclaude/settings.json` |
 
 ```json
 {
@@ -147,11 +155,35 @@ O OpenClaude suporta múltiplos provedores, mas o comportamento não é idêntic
 
 Para melhores resultados, use modelos com bom suporte a chamadas de ferramentas/funções.
 
+## Personagem ao Iniciar o OpenClaude
+
+O OpenClaude exibe um pequeno personagem ao lado do spinner enquanto processa. Você pode trocar o personagem com o comando `/character`.
+
+### Opções disponíveis
+
+| Personagem | Descrição |
+|------------|-----------|
+| `clawd` | Garra estilizada (padrão) |
+| `dragon` | Dragão animado |
+| `none` | Sem personagem |
+
+### Como mudar
+
+Dentro do OpenClaude, rode:
+
+```
+/character clawd
+/character dragon
+/character none
+```
+
+A escolha é salva e persiste entre sessões. Para restaurar o padrão, use `/character clawd`.
+
 ## Roteamento de Agentes
 
 O OpenClaude pode rotear diferentes agentes para diferentes modelos através de configurações. Útil para otimização de custos ou divisão de trabalho por capacidade do modelo.
 
-Adicione ao `~/.claude/settings.json`:
+Adicione ao `~/.openclaude/settings.json`:
 
 ```json
 {
