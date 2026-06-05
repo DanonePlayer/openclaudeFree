@@ -1638,6 +1638,11 @@ export async function buildStartupEnvFromProfile(options?: {
     return processEnv
   }
 
+  // If settingsOpen.json (or env) already has a concrete provider, respect it.
+  if (hasConcreteProviderSelection(processEnv)) {
+    return processEnv
+  }
+
   if (!persisted) {
     // No saved profile — default to Gitlawb Opengateway.
     const env = buildCompatibilityProcessEnv({
